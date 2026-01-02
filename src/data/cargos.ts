@@ -1,8 +1,10 @@
 // Dados extraídos do PLC 0017/2025 - PCCR São Pedro da Aldeia
 
+export type Categoria = 'geral' | 'saude' | 'dentista' | 'medico' | 'enfermagem';
+
 export interface CargoInfo {
   nome: string;
-  categoria: 'geral' | 'saude' | 'dentista' | 'medico' | 'enfermagem';
+  categoria: Categoria;
   nivelInicial: string;
   cargaHoraria: number;
   salariosPorPadrao: number[]; // Padrões A até P (16 padrões = até 45 anos)
@@ -81,10 +83,10 @@ function calcularProporcional(salarios: number[], chOriginal: number, chDesejada
   return salarios.map(s => Math.round((s * chDesejada / chOriginal) * 100) / 100);
 }
 
-export const cargos: CargoInfo[] = ([
+const cargosData = [
   // AGENTES DA SAÚDE
-  { nome: "Agente Comunitário de Saúde", categoria: 'saude', nivelInicial: 'S I', cargaHoraria: 40, salariosPorPadrao: tabelaAgenteSaude['S I'] },
-  { nome: "Agente de Combate às Endemias", categoria: 'saude', nivelInicial: 'S I', cargaHoraria: 40, salariosPorPadrao: tabelaAgenteSaude['S I'] },
+  { nome: "Agente Comunitário de Saúde", categoria: 'saude' as Categoria, nivelInicial: 'S I', cargaHoraria: 40, salariosPorPadrao: tabelaAgenteSaude['S I'] },
+  { nome: "Agente de Combate às Endemias", categoria: 'saude' as Categoria, nivelInicial: 'S I', cargaHoraria: 40, salariosPorPadrao: tabelaAgenteSaude['S I'] },
   
   // APOIO À FISCALIZAÇÃO
   { nome: "Auxiliar de Fiscal de Transporte", categoria: 'geral', nivelInicial: 'G I', cargaHoraria: 40, salariosPorPadrao: tabelaGeral40h['G I'] },
@@ -260,7 +262,9 @@ export const cargos: CargoInfo[] = ([
   { nome: "Médico - Veterinário", categoria: 'medico', nivelInicial: 'M I', cargaHoraria: 20, salariosPorPadrao: tabelaMedico20h['M I'] },
   { nome: "Médico - Veterinário Cirurgião", categoria: 'medico', nivelInicial: 'M I', cargaHoraria: 20, salariosPorPadrao: tabelaMedico20h['M I'] },
   { nome: "Médico - Saúde da Família e Comunidade", categoria: 'medico', nivelInicial: 'M I', cargaHoraria: 40, salariosPorPadrao: tabelaMedico40h['M I'] },
-].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+] as const;
+
+export const cargos: CargoInfo[] = [...cargosData].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
 export function calcularSalario(cargo: CargoInfo, anosServico: number): number {
   // Cada padrão corresponde a 3 anos de serviço
