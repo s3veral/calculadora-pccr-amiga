@@ -24,6 +24,19 @@ interface ResultadoCargo {
   cargaHoraria: number;
 }
 
+interface ComposicaoSalarial {
+  comissao: number;
+  portaria: number;
+  anuenio: number;
+  insalubridade: number;
+  periculosidade: number;
+  adicionalNoturno: number;
+  horasExtras: number;
+  gratificacao: number;
+  outrosVencimentos: number;
+  descontos: number;
+}
+
 interface ResultadoMatricula {
   tipo: 'matricula';
   nome: string;
@@ -33,6 +46,9 @@ interface ResultadoMatricula {
   categoria?: string;
   matricula: string;
   salarioBaseAtual: number;
+  brutoAtual: number;
+  liquidoAtual: number;
+  composicao: ComposicaoSalarial;
   dataAdmissao: string;
   anosServico: number;
   salarioNovo: number;
@@ -53,6 +69,16 @@ interface HistoricoItem {
   regime: string;
   secretaria: string;
   nome: string;
+  comissao?: number;
+  portaria?: number;
+  anuenio?: number;
+  insalubridade?: number;
+  periculosidade?: number;
+  adicionalNoturno?: number;
+  horasExtras?: number;
+  gratificacao?: number;
+  outrosVencimentos?: number;
+  descontos?: number;
 }
 
 interface HistoricoData {
@@ -382,6 +408,20 @@ const Index = () => {
           cargo: dadosServidor.CARGO,
           matricula: dadosServidor.MATRICULA,
           salarioBaseAtual: parseFloat(dadosServidor.BASE_SALARIAL) || 0,
+          brutoAtual: parseFloat(dadosServidor.BRUTO) || 0,
+          liquidoAtual: parseFloat(dadosServidor.LIQUIDO) || 0,
+          composicao: {
+            comissao: parseFloat(dadosServidor.COMISSAO) || 0,
+            portaria: parseFloat(dadosServidor.PORTARIA) || 0,
+            anuenio: parseFloat(dadosServidor.ANUENIO) || 0,
+            insalubridade: parseFloat(dadosServidor.INSALUBRIDADE) || 0,
+            periculosidade: parseFloat(dadosServidor.PERICULOSIDADE) || 0,
+            adicionalNoturno: parseFloat(dadosServidor.ADICIONAL_NOTURNO) || 0,
+            horasExtras: parseFloat(dadosServidor.HORAS_EXTRAS) || 0,
+            gratificacao: parseFloat(dadosServidor.GRATIFICACAO) || 0,
+            outrosVencimentos: parseFloat(dadosServidor.OUTROS_VENCIMENTOS) || 0,
+            descontos: parseFloat(dadosServidor.DESCONTOS) || 0,
+          },
           dataAdmissao: dadosServidor.DATA_ADMISSAO,
           anosServico: anosCalc,
           salarioNovo: 0,
@@ -412,6 +452,20 @@ const Index = () => {
         categoria: correspondencia.cargo.categoria,
         matricula: dadosServidor.MATRICULA,
         salarioBaseAtual: salarioAnterior,
+        brutoAtual: parseFloat(dadosServidor.BRUTO) || 0,
+        liquidoAtual: parseFloat(dadosServidor.LIQUIDO) || 0,
+        composicao: {
+          comissao: parseFloat(dadosServidor.COMISSAO) || 0,
+          portaria: parseFloat(dadosServidor.PORTARIA) || 0,
+          anuenio: parseFloat(dadosServidor.ANUENIO) || 0,
+          insalubridade: parseFloat(dadosServidor.INSALUBRIDADE) || 0,
+          periculosidade: parseFloat(dadosServidor.PERICULOSIDADE) || 0,
+          adicionalNoturno: parseFloat(dadosServidor.ADICIONAL_NOTURNO) || 0,
+          horasExtras: parseFloat(dadosServidor.HORAS_EXTRAS) || 0,
+          gratificacao: parseFloat(dadosServidor.GRATIFICACAO) || 0,
+          outrosVencimentos: parseFloat(dadosServidor.OUTROS_VENCIMENTOS) || 0,
+          descontos: parseFloat(dadosServidor.DESCONTOS) || 0,
+        },
         dataAdmissao: dadosServidor.DATA_ADMISSAO,
         anosServico: anosCalc,
         salarioNovo,
@@ -788,6 +842,103 @@ const Index = () => {
                           )}
                         </CardContent>
                       </Card>
+
+                      {/* Detalhamento do Bruto Atual */}
+                      {resultado.brutoAtual > 0 && (
+                        <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                          <CardContent className="pt-4 pb-4 space-y-3">
+                            <h3 className="font-semibold text-center text-base text-blue-800 dark:text-blue-200">
+                              💰 Composição do Bruto Atual
+                            </h3>
+                            
+                            <div className="space-y-2 text-sm">
+                              {/* Base Salarial */}
+                              <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                <span className="text-muted-foreground">Base Salarial:</span>
+                                <span className="font-medium">{formatarMoeda(resultado.salarioBaseAtual)}</span>
+                              </div>
+                              
+                              {/* Componentes variáveis - só mostra se > 0 */}
+                              {resultado.composicao.comissao > 0 && (
+                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                  <span className="text-muted-foreground">Comissão:</span>
+                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.comissao)}</span>
+                                </div>
+                              )}
+                              {resultado.composicao.portaria > 0 && (
+                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                  <span className="text-muted-foreground">Portaria:</span>
+                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.portaria)}</span>
+                                </div>
+                              )}
+                              {resultado.composicao.anuenio > 0 && (
+                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                  <span className="text-muted-foreground">Anuênio:</span>
+                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.anuenio)}</span>
+                                </div>
+                              )}
+                              {resultado.composicao.insalubridade > 0 && (
+                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                  <span className="text-muted-foreground">Insalubridade:</span>
+                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.insalubridade)}</span>
+                                </div>
+                              )}
+                              {resultado.composicao.periculosidade > 0 && (
+                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                  <span className="text-muted-foreground">Periculosidade:</span>
+                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.periculosidade)}</span>
+                                </div>
+                              )}
+                              {resultado.composicao.adicionalNoturno > 0 && (
+                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                  <span className="text-muted-foreground">Adicional Noturno:</span>
+                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.adicionalNoturno)}</span>
+                                </div>
+                              )}
+                              {resultado.composicao.horasExtras > 0 && (
+                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                  <span className="text-muted-foreground">Horas Extras:</span>
+                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.horasExtras)}</span>
+                                </div>
+                              )}
+                              {resultado.composicao.gratificacao > 0 && (
+                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                  <span className="text-muted-foreground">Gratificação:</span>
+                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.gratificacao)}</span>
+                                </div>
+                              )}
+                              {resultado.composicao.outrosVencimentos > 0 && (
+                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                  <span className="text-muted-foreground">Outros Vencimentos:</span>
+                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.outrosVencimentos)}</span>
+                                </div>
+                              )}
+                              
+                              {/* Linha divisória e totais */}
+                              <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2 space-y-2">
+                                <div className="flex justify-between items-center bg-background p-2 rounded font-semibold">
+                                  <span>Bruto:</span>
+                                  <span className="text-lg text-blue-700 dark:text-blue-300">{formatarMoeda(resultado.brutoAtual)}</span>
+                                </div>
+                                {resultado.composicao.descontos > 0 && (
+                                  <div className="flex justify-between items-center bg-background/80 p-2 rounded">
+                                    <span className="text-muted-foreground">Descontos:</span>
+                                    <span className="font-medium text-red-600">-{formatarMoeda(resultado.composicao.descontos)}</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between items-center bg-background p-2 rounded font-semibold">
+                                  <span>Líquido:</span>
+                                  <span className="text-lg">{formatarMoeda(resultado.liquidoAtual)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <p className="text-[10px] text-center text-blue-600 dark:text-blue-400">
+                              * Dados do mês mais recente disponível no Portal da Transparência
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
 
                       {resultado.salarioNovo > 0 && (
                         <Card className="bg-muted/30 border-muted">
