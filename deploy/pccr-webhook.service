@@ -1,0 +1,19 @@
+[Unit]
+Description=PCCR Webhook Server para Deploy Automático
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/var/www/pccr/deploy
+Environment=WEBHOOK_PORT=9000
+Environment=WEBHOOK_SECRET=seu_secret_seguro_aqui
+ExecStart=/usr/bin/node /var/www/pccr/deploy/webhook-server.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=pccr-webhook
+
+[Install]
+WantedBy=multi-user.target
