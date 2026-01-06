@@ -289,6 +289,8 @@ const Index = () => {
 
     setCarregando(true);
     setResultado(null);
+    setHistoricoData(null);
+    setMostrarHistorico(false);
 
     try {
       // Busca na API os dados mais recentes (ano 2025, mês atual ou anterior)
@@ -720,7 +722,7 @@ const Index = () => {
                                 <p className="text-xl font-bold text-muted-foreground">{formatarMoeda(resultado.salarioBaseAtual)}</p>
                               </div>
                               <div className="p-3 bg-primary/10 rounded-lg">
-                                <p className="text-xs text-muted-foreground mb-1">🎉 Com PCCR</p>
+                                <p className="text-xs text-muted-foreground mb-1">🎉 Base PCCR</p>
                                 <p className="text-xl font-bold text-primary">{formatarMoeda(resultado.salarioNovo)}</p>
                               </div>
                             </div>
@@ -733,6 +735,44 @@ const Index = () => {
                               <p className={`text-lg font-semibold ${resultado.aumento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 ({resultado.aumento >= 0 ? '+' : ''}{resultado.percentual.toFixed(2)}%)
                               </p>
+                            </div>
+
+                            {/* Projeção com maior base */}
+                            {resultado.salarioBaseAtual > resultado.salarioNovo && (
+                              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-3">
+                                <div className="flex items-start gap-2">
+                                  <span className="text-amber-600">⚠️</span>
+                                  <div>
+                                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                                      Seu salário atual é MAIOR que a tabela PCCR
+                                    </p>
+                                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                                      Caso seja mantido o maior valor como base, a projeção seria:
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="bg-background/80 rounded p-3 text-center">
+                                  <p className="text-xs text-muted-foreground mb-1">Projeção mantendo base atual</p>
+                                  <p className="text-2xl font-bold text-primary">
+                                    {formatarMoeda(resultado.salarioBaseAtual)}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    (sem alteração na base, mantendo seu salário atual)
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Aviso de estimativa */}
+                            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-600">ℹ️</span>
+                                <p className="text-xs text-blue-800 dark:text-blue-200">
+                                  <strong>ATENÇÃO:</strong> Estes valores são apenas <strong>ESTIMATIVAS</strong> baseadas no PLC 0017/2025. 
+                                  O documento oficial do PCCR é pouco detalhado sobre regras de enquadramento e transição. 
+                                  Valores finais dependem de regulamentação complementar.
+                                </p>
+                              </div>
                             </div>
 
                             {/* Botão para ver histórico */}
