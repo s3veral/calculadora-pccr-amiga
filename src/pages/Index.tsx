@@ -70,6 +70,38 @@ interface HistoricoData {
 
 type Resultado = ResultadoCargo | ResultadoMatricula;
 
+// Função para verificar se um cargo é da área da saúde (para insalubridade)
+const isCargoSaude = (categoria?: string, cargo?: string): boolean => {
+  // Categorias explícitas de saúde
+  const categoriasSaude = ['saude', 'enfermagem', 'medico', 'dentista'];
+  if (categoria && categoriasSaude.includes(categoria)) return true;
+  
+  // Cargos da saúde que estão na categoria 'geral'
+  const cargosSaude = [
+    'fisioterapeuta', 'fonoaudiologo', 'fonoaudiólogo', 'psicologo', 'psicólogo',
+    'nutricionista', 'farmaceutico', 'farmacêutico', 'terapeuta ocupacional',
+    'assistente social', 'auxiliar de farmacia', 'auxiliar de farmácia',
+    'auxiliar de saude bucal', 'auxiliar de saúde bucal', 'cuidador de saude mental',
+    'cuidador de saúde mental', 'maqueiro', 'biologo', 'biólogo',
+    'agente comunitario de saude', 'agente comunitário de saúde',
+    'agente de combate', 'acs', 'ace', 'tecnico de enfermagem', 'técnico de enfermagem',
+    'auxiliar de enfermagem', 'enfermeiro', 'enfermeira', 'medico', 'médico',
+    'dentista', 'cirurgiao-dentista', 'cirurgião-dentista', 'odontologo', 'odontólogo',
+    'musicoterapeuta', 'psicomotricista', 'educador fisico', 'educador físico',
+    'fiscal sanitario', 'fiscal sanitário'
+  ];
+  
+  if (cargo) {
+    const cargoNormalizado = cargo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return cargosSaude.some(c => {
+      const cNormalizado = c.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return cargoNormalizado.includes(cNormalizado);
+    });
+  }
+  
+  return false;
+};
+
 const Index = () => {
   // Estado para modo Cargo
   const [cargoSelecionado, setCargoSelecionado] = useState<CargoInfo | null>(null);
@@ -663,7 +695,7 @@ const Index = () => {
                       </Card>
 
                       {/* Insalubridade para cargos da saúde */}
-                      {['saude', 'enfermagem', 'medico', 'dentista'].includes(resultado.categoria) && (
+                      {isCargoSaude(resultado.categoria, resultado.cargo) && (
                         <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
                           <CardContent className="pt-6 space-y-4">
                             <h3 className="font-semibold text-center text-lg text-green-800 dark:text-green-200">
@@ -675,25 +707,25 @@ const Index = () => {
                             
                             <div className="grid grid-cols-3 gap-2 text-center">
                               <div className="p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
-                                <p className="text-xs text-muted-foreground mb-1">Grau Mínimo (10%)</p>
+                                <p className="text-xs text-muted-foreground mb-1">Grau Mínimo</p>
                                 <p className="text-lg font-bold text-green-700 dark:text-green-300">
                                   {formatarMoeda(resultado.salarioNovo * 1.10)}
                                 </p>
-                                <p className="text-xs text-green-600">+{formatarMoeda(resultado.salarioNovo * 0.10)}</p>
+                                <p className="text-xs text-green-600">+{formatarMoeda(resultado.salarioNovo * 0.10)} (+10%)</p>
                               </div>
                               <div className="p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
-                                <p className="text-xs text-muted-foreground mb-1">Grau Médio (20%)</p>
+                                <p className="text-xs text-muted-foreground mb-1">Grau Médio</p>
                                 <p className="text-lg font-bold text-green-700 dark:text-green-300">
                                   {formatarMoeda(resultado.salarioNovo * 1.20)}
                                 </p>
-                                <p className="text-xs text-green-600">+{formatarMoeda(resultado.salarioNovo * 0.20)}</p>
+                                <p className="text-xs text-green-600">+{formatarMoeda(resultado.salarioNovo * 0.20)} (+20%)</p>
                               </div>
                               <div className="p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
-                                <p className="text-xs text-muted-foreground mb-1">Grau Máximo (40%)</p>
+                                <p className="text-xs text-muted-foreground mb-1">Grau Máximo</p>
                                 <p className="text-lg font-bold text-green-700 dark:text-green-300">
                                   {formatarMoeda(resultado.salarioNovo * 1.40)}
                                 </p>
-                                <p className="text-xs text-green-600">+{formatarMoeda(resultado.salarioNovo * 0.40)}</p>
+                                <p className="text-xs text-green-600">+{formatarMoeda(resultado.salarioNovo * 0.40)} (+40%)</p>
                               </div>
                             </div>
                             
@@ -840,7 +872,7 @@ const Index = () => {
                             </div>
 
                             {/* Insalubridade para cargos da saúde */}
-                            {resultado.categoria && ['saude', 'enfermagem', 'medico', 'dentista'].includes(resultado.categoria) && (
+                            {isCargoSaude(resultado.categoria, resultado.cargo) && (
                               <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
                                 <CardContent className="pt-4 pb-4 space-y-3">
                                   <h3 className="font-semibold text-center text-base text-green-800 dark:text-green-200">
@@ -855,25 +887,25 @@ const Index = () => {
                                     return (
                                       <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center">
                                         <div className="p-2 sm:p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
-                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Mínimo (10%)</p>
+                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Mínimo</p>
                                           <p className="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">
                                             {formatarMoeda(baseMaior * 1.10)}
                                           </p>
-                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.10)}</p>
+                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.10)} (+10%)</p>
                                         </div>
                                         <div className="p-2 sm:p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
-                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Médio (20%)</p>
+                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Médio</p>
                                           <p className="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">
                                             {formatarMoeda(baseMaior * 1.20)}
                                           </p>
-                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.20)}</p>
+                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.20)} (+20%)</p>
                                         </div>
                                         <div className="p-2 sm:p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
-                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Máximo (40%)</p>
+                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Máximo</p>
                                           <p className="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">
                                             {formatarMoeda(baseMaior * 1.40)}
                                           </p>
-                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.40)}</p>
+                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.40)} (+40%)</p>
                                         </div>
                                       </div>
                                     );
