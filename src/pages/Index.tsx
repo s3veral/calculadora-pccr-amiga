@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface ResultadoCargo {
   tipo: 'cargo';
   cargo: string;
+  categoria: string;
   anos: number;
   salarioNovo: number;
   salarioAnterior: number;
@@ -114,6 +115,7 @@ const Index = () => {
       setResultado({
         tipo: 'cargo',
         cargo: cargoSelecionado.nome,
+        categoria: cargoSelecionado.categoria,
         anos: anosServico,
         salarioNovo,
         salarioAnterior,
@@ -657,6 +659,48 @@ const Index = () => {
                           </p>
                         </CardContent>
                       </Card>
+
+                      {/* Insalubridade para cargos da saúde */}
+                      {['saude', 'enfermagem', 'medico', 'dentista'].includes(resultado.categoria) && (
+                        <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+                          <CardContent className="pt-6 space-y-4">
+                            <h3 className="font-semibold text-center text-lg text-green-800 dark:text-green-200">
+                              🏥 Estimativa com Insalubridade
+                            </h3>
+                            <p className="text-xs text-center text-green-700 dark:text-green-300">
+                              Valores estimados caso receba adicional de insalubridade sobre o salário base PCCR
+                            </p>
+                            
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
+                                <p className="text-xs text-muted-foreground mb-1">Grau Mínimo (10%)</p>
+                                <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                                  {formatarMoeda(resultado.salarioNovo * 1.10)}
+                                </p>
+                                <p className="text-xs text-green-600">+{formatarMoeda(resultado.salarioNovo * 0.10)}</p>
+                              </div>
+                              <div className="p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
+                                <p className="text-xs text-muted-foreground mb-1">Grau Médio (20%)</p>
+                                <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                                  {formatarMoeda(resultado.salarioNovo * 1.20)}
+                                </p>
+                                <p className="text-xs text-green-600">+{formatarMoeda(resultado.salarioNovo * 0.20)}</p>
+                              </div>
+                              <div className="p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
+                                <p className="text-xs text-muted-foreground mb-1">Grau Máximo (40%)</p>
+                                <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                                  {formatarMoeda(resultado.salarioNovo * 1.40)}
+                                </p>
+                                <p className="text-xs text-green-600">+{formatarMoeda(resultado.salarioNovo * 0.40)}</p>
+                              </div>
+                            </div>
+                            
+                            <p className="text-xs text-center text-green-600 dark:text-green-400">
+                              ⚠️ Valores ilustrativos. O percentual real depende da avaliação do ambiente de trabalho.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
                     </>
                   )}
 
