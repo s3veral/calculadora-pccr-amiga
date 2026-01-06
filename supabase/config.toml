@@ -1,0 +1,4 @@
+project_id = "jchgywxrwbknvhjuiprz"
+
+[functions.historico-salarial]
+verify_jwt = false
