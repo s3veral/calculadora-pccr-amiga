@@ -30,6 +30,7 @@ interface ResultadoMatricula {
   cargo: string;
   cargoEquivalente?: string;
   cargoAproximado?: string;
+  categoria?: string;
   matricula: string;
   salarioBaseAtual: number;
   dataAdmissao: string;
@@ -376,6 +377,7 @@ const Index = () => {
         cargo: dadosServidor.CARGO,
         cargoEquivalente: correspondencia.cargo.nome,
         cargoAproximado: correspondencia.aproximado,
+        categoria: correspondencia.cargo.categoria,
         matricula: dadosServidor.MATRICULA,
         salarioBaseAtual: salarioAnterior,
         dataAdmissao: dadosServidor.DATA_ADMISSAO,
@@ -772,7 +774,7 @@ const Index = () => {
                             </div>
 
                             <div className="text-center p-4 bg-background rounded-lg border">
-                              <p className="text-sm text-muted-foreground mb-2">Diferença</p>
+                              <p className="text-sm text-muted-foreground mb-2">Diferença (Base PCCR vs Atual)</p>
                               <p className={`text-2xl font-bold ${resultado.aumento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {resultado.aumento >= 0 ? '+' : ''}{formatarMoeda(resultado.aumento)}
                               </p>
@@ -781,29 +783,47 @@ const Index = () => {
                               </p>
                             </div>
 
-                            {/* Projeção com maior base */}
-                            {resultado.salarioBaseAtual > resultado.salarioNovo && (
-                              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-3">
+                            {/* Projeção com maior base - sempre mostrar ambas opções */}
+                            {resultado.salarioBaseAtual !== resultado.salarioNovo && (
+                              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-4">
                                 <div className="flex items-start gap-2">
-                                  <span className="text-amber-600">⚠️</span>
+                                  <span className="text-amber-600 text-lg">⚖️</span>
                                   <div>
                                     <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                                      Seu salário atual é MAIOR que a tabela PCCR
+                                      Projeções usando diferentes bases
                                     </p>
                                     <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                                      Caso seja mantido o maior valor como base, a projeção seria:
+                                      Veja como fica seu salário estimado utilizando cada base como referência:
                                     </p>
                                   </div>
                                 </div>
-                                <div className="bg-background/80 rounded p-3 text-center">
-                                  <p className="text-xs text-muted-foreground mb-1">Projeção mantendo base atual</p>
-                                  <p className="text-2xl font-bold text-primary">
-                                    {formatarMoeda(resultado.salarioBaseAtual)}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    (sem alteração na base, mantendo seu salário atual)
-                                  </p>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="bg-background/80 rounded p-3 text-center border border-primary/30">
+                                    <p className="text-xs text-muted-foreground mb-1">📗 Usando Base PCCR</p>
+                                    <p className="text-xl font-bold text-primary">
+                                      {formatarMoeda(resultado.salarioNovo)}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-1">
+                                      (tabela do PLC 0017/2025)
+                                    </p>
+                                  </div>
+                                  <div className="bg-background/80 rounded p-3 text-center border border-amber-300 dark:border-amber-700">
+                                    <p className="text-xs text-muted-foreground mb-1">📙 Usando Base Atual</p>
+                                    <p className="text-xl font-bold text-amber-700 dark:text-amber-300">
+                                      {formatarMoeda(resultado.salarioBaseAtual)}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground mt-1">
+                                      (seu salário base atual)
+                                    </p>
+                                  </div>
                                 </div>
+
+                                {resultado.salarioBaseAtual > resultado.salarioNovo && (
+                                  <p className="text-xs text-amber-700 dark:text-amber-300 text-center font-medium">
+                                    ⚠️ Seu salário atual é MAIOR que a tabela PCCR. Se o maior valor for mantido, você não teria redução.
+                                  </p>
+                                )}
                               </div>
                             )}
 
@@ -818,6 +838,53 @@ const Index = () => {
                                 </p>
                               </div>
                             </div>
+
+                            {/* Insalubridade para cargos da saúde */}
+                            {resultado.categoria && ['saude', 'enfermagem', 'medico', 'dentista'].includes(resultado.categoria) && (
+                              <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+                                <CardContent className="pt-4 pb-4 space-y-3">
+                                  <h3 className="font-semibold text-center text-base text-green-800 dark:text-green-200">
+                                    🏥 Estimativa com Insalubridade
+                                  </h3>
+                                  <p className="text-[10px] text-center text-green-700 dark:text-green-300">
+                                    Valores estimados caso receba adicional de insalubridade (calculados sobre a maior base)
+                                  </p>
+                                  
+                                  {(() => {
+                                    const baseMaior = Math.max(resultado.salarioNovo, resultado.salarioBaseAtual);
+                                    return (
+                                      <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center">
+                                        <div className="p-2 sm:p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
+                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Mínimo (10%)</p>
+                                          <p className="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">
+                                            {formatarMoeda(baseMaior * 1.10)}
+                                          </p>
+                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.10)}</p>
+                                        </div>
+                                        <div className="p-2 sm:p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
+                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Médio (20%)</p>
+                                          <p className="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">
+                                            {formatarMoeda(baseMaior * 1.20)}
+                                          </p>
+                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.20)}</p>
+                                        </div>
+                                        <div className="p-2 sm:p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
+                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Máximo (40%)</p>
+                                          <p className="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">
+                                            {formatarMoeda(baseMaior * 1.40)}
+                                          </p>
+                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.40)}</p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
+                                  
+                                  <p className="text-[10px] text-center text-green-600 dark:text-green-400">
+                                    ⚠️ Valores ilustrativos. O percentual real depende da avaliação do ambiente de trabalho.
+                                  </p>
+                                </CardContent>
+                              </Card>
+                            )}
 
                             {/* Botão para ver histórico */}
                             <Button
@@ -900,9 +967,9 @@ const Index = () => {
 
                   {/* A piadinha - só aparece se aumento < 25% */}
                   {resultado.percentual < 25 && (
-                    <div className="text-center p-4 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30">
-                      <p className="text-sm text-muted-foreground italic">
-                        E aí, efetivo? Achou que seu aumento seria de quanto? 25%?! 😏 HAHAHAHA
+                    <div className="text-center p-3 sm:p-4 bg-amber-100/80 dark:bg-amber-900/40 rounded-lg border-2 border-dashed border-amber-400 dark:border-amber-600">
+                      <p className="text-sm sm:text-base font-medium text-amber-800 dark:text-amber-200">
+                        E aí, efetivo? Achou que seu aumento seria de quanto? <span className="font-bold">25%?!</span> 😏 HAHAHAHA
                       </p>
                     </div>
                   )}
