@@ -57,9 +57,20 @@ serve(async (req) => {
               dataAdmissao: servidor.DATA_ADMISSAO,
               regime: servidor.DESCRICAO_REGIME,
               secretaria: servidor.SECRETARIA,
-              nome: servidor.NOME
+              nome: servidor.NOME,
+              // Campos detalhados da composição salarial
+              comissao: parseFloat(servidor.COMISSAO) || 0,
+              portaria: parseFloat(servidor.PORTARIA) || 0,
+              anuenio: parseFloat(servidor.ANUENIO) || 0,
+              insalubridade: parseFloat(servidor.INSALUBRIDADE) || 0,
+              periculosidade: parseFloat(servidor.PERICULOSIDADE) || 0,
+              adicionalNoturno: parseFloat(servidor.ADICIONAL_NOTURNO) || 0,
+              horasExtras: parseFloat(servidor.HORAS_EXTRAS) || 0,
+              gratificacao: parseFloat(servidor.GRATIFICACAO) || 0,
+              outrosVencimentos: parseFloat(servidor.OUTROS_VENCIMENTOS) || 0,
+              descontos: parseFloat(servidor.DESCONTOS) || 0,
             });
-            console.log(`Encontrado em ${ano}/${mes}: BASE_SALARIAL = ${servidor.BASE_SALARIAL}`);
+            console.log(`Encontrado em ${ano}/${mes}: BASE_SALARIAL = ${servidor.BASE_SALARIAL}, BRUTO = ${servidor.BRUTO}`);
           }
         }
       } catch (error) {
