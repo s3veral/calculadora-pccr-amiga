@@ -817,46 +817,66 @@ const Index = () => {
 
                             {/* Projeção com maior base - sempre mostrar ambas opções */}
                             {resultado.salarioBaseAtual !== resultado.salarioNovo && (
-                              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-4">
-                                <div className="flex items-start gap-2">
-                                  <span className="text-amber-600 text-lg">⚖️</span>
-                                  <div>
-                                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                                      Projeções usando diferentes bases
-                                    </p>
-                                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                                      Veja como fica seu salário estimado utilizando cada base como referência:
-                                    </p>
-                                  </div>
-                                </div>
+                              (() => {
+                                // Calcular progressão sobre o base atual usando regras PCCR
+                                // Progressão: a cada 3 anos sobe 1 padrão com ~3% de aumento
+                                const padraoAtual = Math.min(Math.floor(resultado.anosServico / 3), 14);
+                                const fatorProgressao = Math.pow(1.03, padraoAtual); // ~3% por padrão
+                                const baseAtualComProgressao = resultado.salarioBaseAtual * fatorProgressao;
                                 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                  <div className="bg-background/80 rounded p-3 text-center border border-primary/30">
-                                    <p className="text-xs text-muted-foreground mb-1">📗 Usando Base PCCR</p>
-                                    <p className="text-xl font-bold text-primary">
-                                      {formatarMoeda(resultado.salarioNovo)}
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground mt-1">
-                                      (tabela do PLC 0017/2025)
-                                    </p>
-                                  </div>
-                                  <div className="bg-background/80 rounded p-3 text-center border border-amber-300 dark:border-amber-700">
-                                    <p className="text-xs text-muted-foreground mb-1">📙 Usando Base Atual</p>
-                                    <p className="text-xl font-bold text-amber-700 dark:text-amber-300">
-                                      {formatarMoeda(resultado.salarioBaseAtual)}
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground mt-1">
-                                      (seu salário base atual)
-                                    </p>
-                                  </div>
-                                </div>
+                                return (
+                                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-4">
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-amber-600 text-lg">⚖️</span>
+                                      <div>
+                                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                                          Projeções com Progressão PCCR
+                                        </p>
+                                        <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                                          Estimativa aplicando as regras de progressão (padrão {getPadraoAtual(resultado.anosServico)}) em cada base:
+                                        </p>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      <div className="bg-background/80 rounded p-3 text-center border border-primary/30">
+                                        <p className="text-xs text-muted-foreground mb-1">📗 Base Tabela PCCR</p>
+                                        <p className="text-xl font-bold text-primary">
+                                          {formatarMoeda(resultado.salarioNovo)}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground mt-1">
+                                          (tabela PLC 0017/2025 + progressão)
+                                        </p>
+                                      </div>
+                                      <div className="bg-background/80 rounded p-3 text-center border border-amber-300 dark:border-amber-700">
+                                        <p className="text-xs text-muted-foreground mb-1">📙 Base Atual + Progressão PCCR</p>
+                                        <p className="text-xl font-bold text-amber-700 dark:text-amber-300">
+                                          {formatarMoeda(baseAtualComProgressao)}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground mt-1">
+                                          (R$ {resultado.salarioBaseAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} × progressão)
+                                        </p>
+                                      </div>
+                                    </div>
 
-                                {resultado.salarioBaseAtual > resultado.salarioNovo && (
-                                  <p className="text-xs text-amber-700 dark:text-amber-300 text-center font-medium">
-                                    ⚠️ Seu salário atual é MAIOR que a tabela PCCR. Se o maior valor for mantido, você não teria redução.
-                                  </p>
-                                )}
-                              </div>
+                                    <div className="text-center p-3 bg-background/50 rounded-lg border border-dashed border-amber-300">
+                                      <p className="text-xs text-muted-foreground mb-1">Comparativo das projeções</p>
+                                      <p className={`text-lg font-bold ${resultado.salarioNovo >= baseAtualComProgressao ? 'text-green-600' : 'text-amber-600'}`}>
+                                        {resultado.salarioNovo >= baseAtualComProgressao 
+                                          ? `Tabela PCCR é ${formatarMoeda(resultado.salarioNovo - baseAtualComProgressao)} maior`
+                                          : `Base Atual com progressão é ${formatarMoeda(baseAtualComProgressao - resultado.salarioNovo)} maior`
+                                        }
+                                      </p>
+                                    </div>
+
+                                    {resultado.salarioBaseAtual > resultado.salarioNovo && (
+                                      <p className="text-xs text-amber-700 dark:text-amber-300 text-center font-medium">
+                                        ⚠️ Seu salário atual é MAIOR que a tabela PCCR. Se a regra for manter o maior valor como base, a progressão seria sobre ele.
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              })()
                             )}
 
                             {/* Aviso de estimativa */}
