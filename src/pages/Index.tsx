@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ResultadoCargo {
   tipo: 'cargo';
@@ -37,6 +38,32 @@ interface ResultadoMatricula {
   secretaria: string;
 }
 
+interface HistoricoItem {
+  ano: number;
+  mes: number;
+  cargo: string;
+  baseSalarial: number;
+  bruto: number;
+  liquido: number;
+  dataAdmissao: string;
+  regime: string;
+  secretaria: string;
+  nome: string;
+}
+
+interface HistoricoData {
+  historico: HistoricoItem[];
+  evolucao: {
+    anoInicial: number;
+    anoFinal: number;
+    baseSalarialInicial: number;
+    baseSalarialFinal: number;
+    diferencaAbsoluta: number;
+    diferencaPercentual: number;
+  } | null;
+  matricula: string;
+}
+
 type Resultado = ResultadoCargo | ResultadoMatricula;
 
 const Index = () => {
@@ -48,6 +75,11 @@ const Index = () => {
   // Estado para modo Matrícula
   const [matricula, setMatricula] = useState<string>('');
   const [carregando, setCarregando] = useState(false);
+  
+  // Estado para histórico
+  const [historicoData, setHistoricoData] = useState<HistoricoData | null>(null);
+  const [carregandoHistorico, setCarregandoHistorico] = useState(false);
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
   
   // Resultado
   const [resultado, setResultado] = useState<Resultado | null>(null);
@@ -263,6 +295,32 @@ const Index = () => {
     }
 
     setCarregando(false);
+  };
+
+  const handleBuscarHistorico = async (mat: string) => {
+    setCarregandoHistorico(true);
+    setMostrarHistorico(true);
+    setHistoricoData(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('historico-salarial', {
+        body: { matricula: mat }
+      });
+
+      if (error) {
+        console.error('Erro ao buscar histórico:', error);
+        toast.error('Erro ao buscar histórico salarial');
+        setCarregandoHistorico(false);
+        return;
+      }
+
+      setHistoricoData(data as HistoricoData);
+    } catch (error) {
+      console.error('Erro ao buscar histórico:', error);
+      toast.error('Erro ao buscar histórico salarial');
+    }
+
+    setCarregandoHistorico(false);
   };
 
   const formatarMoeda = (valor: number) => {
@@ -577,6 +635,80 @@ const Index = () => {
                                 ({resultado.aumento >= 0 ? '+' : ''}{resultado.percentual.toFixed(2)}%)
                               </p>
                             </div>
+
+                            {/* Botão para ver histórico */}
+                            <Button
+                              variant="outline"
+                              onClick={() => handleBuscarHistorico(resultado.matricula)}
+                              disabled={carregandoHistorico}
+                              className="w-full"
+                            >
+                              {carregandoHistorico ? '⏳ Carregando...' : '📈 Ver Histórico Salarial (2018-2025)'}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Histórico Salarial */}
+                      {mostrarHistorico && (
+                        <Card className="bg-muted/30 border-muted">
+                          <CardContent className="pt-6 space-y-4">
+                            <h3 className="font-semibold text-center text-lg">📈 Histórico Salarial</h3>
+                            
+                            {carregandoHistorico && (
+                              <div className="text-center py-8">
+                                <p className="text-muted-foreground">Buscando histórico em múltiplos anos...</p>
+                                <p className="text-xs text-muted-foreground mt-1">Isso pode levar alguns segundos</p>
+                              </div>
+                            )}
+
+                            {historicoData && historicoData.historico.length > 0 && (
+                              <>
+                                {/* Evolução geral */}
+                                {historicoData.evolucao && (
+                                  <div className="p-4 bg-primary/10 rounded-lg text-center">
+                                    <p className="text-sm text-muted-foreground mb-2">
+                                      Evolução de {historicoData.evolucao.anoInicial} a {historicoData.evolucao.anoFinal}
+                                    </p>
+                                    <p className="text-lg font-bold">
+                                      {formatarMoeda(historicoData.evolucao.baseSalarialInicial)} → {formatarMoeda(historicoData.evolucao.baseSalarialFinal)}
+                                    </p>
+                                    <p className={`text-sm font-semibold ${historicoData.evolucao.diferencaPercentual >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                      {historicoData.evolucao.diferencaPercentual >= 0 ? '+' : ''}
+                                      {historicoData.evolucao.diferencaPercentual.toFixed(2)}% no período
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Tabela de histórico */}
+                                <div className="space-y-2">
+                                  <p className="text-sm font-medium text-center">Base Salarial por Ano</p>
+                                  <div className="max-h-48 overflow-y-auto space-y-1">
+                                    {historicoData.historico.map((item, idx) => (
+                                      <div key={idx} className="flex justify-between items-center p-2 bg-background rounded text-sm">
+                                        <span className="text-muted-foreground">{item.ano}/{String(item.mes).padStart(2, '0')}</span>
+                                        <span className="font-medium">{formatarMoeda(item.baseSalarial)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            {historicoData && historicoData.historico.length === 0 && (
+                              <div className="text-center py-4">
+                                <p className="text-muted-foreground">Nenhum histórico encontrado para esta matrícula</p>
+                              </div>
+                            )}
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setMostrarHistorico(false)}
+                              className="w-full"
+                            >
+                              Fechar histórico
+                            </Button>
                           </CardContent>
                         </Card>
                       )}
