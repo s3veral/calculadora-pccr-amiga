@@ -583,12 +583,14 @@ const Index = () => {
                     </>
                   )}
 
-                  {/* A piadinha sutil */}
-                  <div className="text-center p-4 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30">
-                    <p className="text-sm text-muted-foreground italic">
-                      E aí, efetivo? Achou que seu aumento seria de quanto? 25%?! 😏 HAHAHAHA
-                    </p>
-                  </div>
+                  {/* A piadinha - só aparece se aumento < 25% */}
+                  {resultado.percentual < 25 && (
+                    <div className="text-center p-4 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30">
+                      <p className="text-sm text-muted-foreground italic">
+                        E aí, efetivo? Achou que seu aumento seria de quanto? 25%?! 😏 HAHAHAHA
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
