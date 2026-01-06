@@ -27,6 +27,8 @@ interface ResultadoMatricula {
   tipo: 'matricula';
   nome: string;
   cargo: string;
+  cargoEquivalente?: string;
+  cargoAproximado?: string;
   matricula: string;
   salarioBaseAtual: number;
   dataAdmissao: string;
@@ -135,57 +137,143 @@ const Index = () => {
     return Math.max(0, anos);
   };
 
-  const encontrarCargoCorrespondente = (cargoAPI: string): { cargo: CargoInfo; ch: number } | null => {
-    const cargoNormalizado = cargoAPI.toLowerCase().trim();
+  const encontrarCargoCorrespondente = (cargoAPI: string): { cargo: CargoInfo; ch: number; aproximado?: string } | null => {
+    const cargoNormalizado = cargoAPI.toLowerCase().trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Remove acentos
     
     // Tenta encontrar correspondência direta
     for (const cargo of cargos) {
-      const nomeNormalizado = cargo.nome.toLowerCase();
+      const nomeNormalizado = cargo.nome.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       if (cargoNormalizado.includes(nomeNormalizado) || nomeNormalizado.includes(cargoNormalizado)) {
-        // Usa a primeira CH disponível como padrão
         return { cargo, ch: cargo.cargasHorariasDisponiveis[0] };
       }
     }
     
-    // Mapeamentos específicos
-    const mapeamentos: { [key: string]: string } = {
-      'psicologo': 'Psicólogo',
-      'psicologa': 'Psicólogo',
-      'assistente social': 'Assistente Social',
-      'enfermeiro': 'Enfermeiro',
-      'enfermeira': 'Enfermeiro',
-      'tecnico de enfermagem': 'Técnico de Enfermagem',
-      'tecnica de enfermagem': 'Técnico de Enfermagem',
-      'agente comunitario de saude': 'Agente Comunitário de Saúde',
-      'agente de combate a endemias': 'Agente de Combate às Endemias',
-      'auxiliar de servicos gerais': 'Auxiliar de Serviços Gerais',
-      'guarda municipal': 'Guarda Municipal',
-      'motorista': 'Motorista',
-      'merendeira': 'Cozinheiro',
-      'auxiliar administrativo': 'Agente Administrativo',
-      'recepcionista': 'Recepcionista',
-      'cirurgiao dentista': 'Cirurgião-Dentista',
-      'fisioterapeuta': 'Fisioterapeuta',
-      'fonoaudiologo': 'Fonoaudiólogo',
-      'nutricionista': 'Nutricionista',
-      'farmaceutico': 'Farmacêutico',
-      'vigia': 'Auxiliar de Serviços Gerais',
-      'servente': 'Auxiliar de Serviços Gerais',
-      'jardineiro': 'Jardineiro',
-      'cozinheiro': 'Cozinheiro',
-      'cozinheira': 'Cozinheiro',
-      'auxiliar de cozinha': 'Auxiliar de Cozinha',
-      'inspetor de aluno': 'Auxiliar de Serviços Gerais',
-      'inspetor escolar': 'Inspetor Escolar',
-      'professor doc i': 'Professor Doc I',
-      'professor doc ii': 'Professor Doc II',
+    // Mapeamentos de cargos inexistentes para cargos equivalentes no PCCR
+    const mapeamentos: { [key: string]: { equivalente: string; aproximado?: string } } = {
+      // Administrativos
+      'auxiliar administrativo': { equivalente: 'Agente Administrativo', aproximado: 'Auxiliar Administrativo → Agente Administrativo' },
+      'aux. adm': { equivalente: 'Agente Administrativo', aproximado: 'Aux. Adm. → Agente Administrativo' },
+      'aux adm': { equivalente: 'Agente Administrativo', aproximado: 'Aux Adm → Agente Administrativo' },
+      'auxiliar adm': { equivalente: 'Agente Administrativo', aproximado: 'Auxiliar Adm → Agente Administrativo' },
+      'oficial administrativo': { equivalente: 'Agente Administrativo', aproximado: 'Oficial Administrativo → Agente Administrativo' },
+      'escriturario': { equivalente: 'Agente Administrativo', aproximado: 'Escriturário → Agente Administrativo' },
+      'agente de administracao': { equivalente: 'Agente Administrativo', aproximado: 'Agente de Administração → Agente Administrativo' },
+      'datilografo': { equivalente: 'Agente Administrativo', aproximado: 'Datilógrafo → Agente Administrativo' },
+      'telefonista': { equivalente: 'Recepcionista', aproximado: 'Telefonista → Recepcionista' },
+      'atendente': { equivalente: 'Recepcionista', aproximado: 'Atendente → Recepcionista' },
+      
+      // Serviços Gerais
+      'vigia': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Vigia → Auxiliar de Serviços Gerais' },
+      'servente': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Servente → Auxiliar de Serviços Gerais' },
+      'zelador': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Zelador → Auxiliar de Serviços Gerais' },
+      'porteiro': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Porteiro → Auxiliar de Serviços Gerais' },
+      'gari': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Gari → Auxiliar de Serviços Gerais' },
+      'continuo': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Contínuo → Auxiliar de Serviços Gerais' },
+      'faxineiro': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Faxineiro → Auxiliar de Serviços Gerais' },
+      'faxineira': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Faxineira → Auxiliar de Serviços Gerais' },
+      'copeiro': { equivalente: 'Auxiliar de Cozinha', aproximado: 'Copeiro → Auxiliar de Cozinha' },
+      'copeira': { equivalente: 'Auxiliar de Cozinha', aproximado: 'Copeira → Auxiliar de Cozinha' },
+      'inspetor de aluno': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Inspetor de Aluno → Auxiliar de Serviços Gerais' },
+      'inspetor de alunos': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Inspetor de Alunos → Auxiliar de Serviços Gerais' },
+      'monitor': { equivalente: 'Auxiliar de Serviços Gerais', aproximado: 'Monitor → Auxiliar de Serviços Gerais' },
+      'merendeira': { equivalente: 'Cozinheiro', aproximado: 'Merendeira → Cozinheiro' },
+      'merendeiro': { equivalente: 'Cozinheiro', aproximado: 'Merendeiro → Cozinheiro' },
+      
+      // Saúde
+      'psicologo': { equivalente: 'Psicólogo' },
+      'psicologa': { equivalente: 'Psicólogo' },
+      'assistente social': { equivalente: 'Assistente Social' },
+      'enfermeiro': { equivalente: 'Enfermeiro' },
+      'enfermeira': { equivalente: 'Enfermeiro' },
+      'tecnico de enfermagem': { equivalente: 'Técnico de Enfermagem' },
+      'tecnica de enfermagem': { equivalente: 'Técnico de Enfermagem' },
+      'aux enfermagem': { equivalente: 'Técnico de Enfermagem', aproximado: 'Aux. Enfermagem → Técnico de Enfermagem' },
+      'auxiliar de enfermagem': { equivalente: 'Técnico de Enfermagem', aproximado: 'Auxiliar de Enfermagem → Técnico de Enfermagem' },
+      'atendente de enfermagem': { equivalente: 'Técnico de Enfermagem', aproximado: 'Atendente de Enfermagem → Técnico de Enfermagem' },
+      'agente comunitario de saude': { equivalente: 'Agente Comunitário de Saúde' },
+      'acs': { equivalente: 'Agente Comunitário de Saúde' },
+      'agente de combate a endemias': { equivalente: 'Agente de Combate às Endemias' },
+      'ace': { equivalente: 'Agente de Combate às Endemias' },
+      'agente de saude publica': { equivalente: 'Agente Comunitário de Saúde', aproximado: 'Agente de Saúde Pública → ACS' },
+      'cirurgiao dentista': { equivalente: 'Cirurgião-Dentista' },
+      'dentista': { equivalente: 'Cirurgião-Dentista', aproximado: 'Dentista → Cirurgião-Dentista' },
+      'odontologo': { equivalente: 'Cirurgião-Dentista', aproximado: 'Odontólogo → Cirurgião-Dentista' },
+      'fisioterapeuta': { equivalente: 'Fisioterapeuta' },
+      'fonoaudiologo': { equivalente: 'Fonoaudiólogo' },
+      'fonoaudilogo': { equivalente: 'Fonoaudiólogo' },
+      'nutricionista': { equivalente: 'Nutricionista' },
+      'farmaceutico': { equivalente: 'Farmacêutico' },
+      'bioquimico': { equivalente: 'Farmacêutico', aproximado: 'Bioquímico → Farmacêutico' },
+      'terapeuta ocupacional': { equivalente: 'Terapeuta Ocupacional' },
+      
+      // Operacional/Obras
+      'motorista': { equivalente: 'Motorista' },
+      'jardineiro': { equivalente: 'Jardineiro' },
+      'cozinheiro': { equivalente: 'Cozinheiro' },
+      'cozinheira': { equivalente: 'Cozinheiro' },
+      'auxiliar de cozinha': { equivalente: 'Auxiliar de Cozinha' },
+      'pedreiro': { equivalente: 'Pedreiro de Conservação e Manutenção', aproximado: 'Pedreiro → Pedreiro de Conservação' },
+      'eletricista': { equivalente: 'Eletricista' },
+      'operador de maquina': { equivalente: 'Condutor de Máquina Pesada', aproximado: 'Operador de Máquina → Condutor de Máquina Pesada' },
+      'operador de maquinas': { equivalente: 'Condutor de Máquina Pesada', aproximado: 'Operador de Máquinas → Condutor de Máquina Pesada' },
+      'tratorista': { equivalente: 'Condutor de Máquina Pesada', aproximado: 'Tratorista → Condutor de Máquina Pesada' },
+      'mecanico': { equivalente: 'Mecânico de Veículos' },
+      'bombeiro hidraulico': { equivalente: 'Artífice de Obras e Serviços Públicos', aproximado: 'Bombeiro Hidráulico → Artífice de Obras' },
+      'carpinteiro': { equivalente: 'Artífice de Obras e Serviços Públicos', aproximado: 'Carpinteiro → Artífice de Obras' },
+      'pintor': { equivalente: 'Artífice de Obras e Serviços Públicos', aproximado: 'Pintor → Artífice de Obras' },
+      'calceteiro': { equivalente: 'Artífice de Obras e Serviços Públicos', aproximado: 'Calceteiro → Artífice de Obras' },
+      
+      // Técnicos
+      'tecnico em contabilidade': { equivalente: 'Técnico em Contabilidade' },
+      'tecnico contabil': { equivalente: 'Técnico em Contabilidade', aproximado: 'Técnico Contábil → Téc. Contabilidade' },
+      'tecnico agricola': { equivalente: 'Técnico Agrícola' },
+      'tecnico de seguranca': { equivalente: 'Técnico de Segurança do Trabalho' },
+      
+      // Nível Superior
+      'advogado': { equivalente: 'Advogado' },
+      'contador': { equivalente: 'Contador' },
+      'engenheiro': { equivalente: 'Engenheiro' },
+      'engenheiro civil': { equivalente: 'Engenheiro Civil' },
+      'arquiteto': { equivalente: 'Arquiteto' },
+      'economista': { equivalente: 'Economista' },
+      'biologo': { equivalente: 'Biólogo' },
+      'veterinario': { equivalente: 'Fiscal Sanitário - Veterinário', aproximado: 'Veterinário → Fiscal Sanitário - Veterinário' },
+      'medico veterinario': { equivalente: 'Fiscal Sanitário - Veterinário', aproximado: 'Médico Veterinário → Fiscal Sanitário - Veterinário' },
+      
+      // Recepção
+      'recepcionista': { equivalente: 'Recepcionista' },
+      
+      // Segurança
+      'guarda municipal': { equivalente: 'Guarda Ambiental', aproximado: 'Guarda Municipal → Guarda Ambiental' },
+      'guarda': { equivalente: 'Guarda Ambiental', aproximado: 'Guarda → Guarda Ambiental' },
+      
+      // Educação (se não existir no PCCR, aproximar)
+      'professor doc i': { equivalente: 'Educador Social', aproximado: 'Professor Doc I → Educador Social' },
+      'professor doc ii': { equivalente: 'Educador Social', aproximado: 'Professor Doc II → Educador Social' },
+      'inspetor escolar': { equivalente: 'Educador Social', aproximado: 'Inspetor Escolar → Educador Social' },
+      'professor': { equivalente: 'Educador Social', aproximado: 'Professor → Educador Social' },
+      'orientador educacional': { equivalente: 'Educador Social', aproximado: 'Orientador Educacional → Educador Social' },
+      'orientador pedagogico': { equivalente: 'Educador Social', aproximado: 'Orientador Pedagógico → Educador Social' },
+      'supervisor escolar': { equivalente: 'Educador Social', aproximado: 'Supervisor Escolar → Educador Social' },
+      
+      // Fiscalização
+      'fiscal': { equivalente: 'Fiscal de Posturas', aproximado: 'Fiscal → Fiscal de Posturas' },
+      'fiscal de obras': { equivalente: 'Fiscal de Obras' },
+      'fiscal de posturas': { equivalente: 'Fiscal de Posturas' },
     };
     
     for (const [chave, valor] of Object.entries(mapeamentos)) {
-      if (cargoNormalizado.includes(chave)) {
-        const cargoEncontrado = cargos.find(c => c.nome === valor);
+      const chaveNormalizada = chave.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (cargoNormalizado.includes(chaveNormalizada)) {
+        const cargoEncontrado = cargos.find(c => c.nome === valor.equivalente);
         if (cargoEncontrado) {
-          return { cargo: cargoEncontrado, ch: cargoEncontrado.cargasHorariasDisponiveis[0] };
+          return { 
+            cargo: cargoEncontrado, 
+            ch: cargoEncontrado.cargasHorariasDisponiveis[0],
+            aproximado: valor.aproximado
+          };
         }
       }
     }
@@ -274,10 +362,16 @@ const Index = () => {
       const aumento = salarioNovo - salarioAnterior;
       const percentual = salarioAnterior > 0 ? ((aumento / salarioAnterior) * 100) : 0;
 
+      if (correspondencia.aproximado) {
+        toast.info(`Cargo aproximado: ${correspondencia.aproximado}`);
+      }
+
       setResultado({
         tipo: 'matricula',
         nome: dadosServidor.NOME,
         cargo: dadosServidor.CARGO,
+        cargoEquivalente: correspondencia.cargo.nome,
+        cargoAproximado: correspondencia.aproximado,
         matricula: dadosServidor.MATRICULA,
         salarioBaseAtual: salarioAnterior,
         dataAdmissao: dadosServidor.DATA_ADMISSAO,
@@ -578,6 +672,11 @@ const Index = () => {
                             <div className="bg-background/50 p-2 rounded">
                               <p className="text-muted-foreground">Cargo:</p>
                               <p className="font-medium">{resultado.cargo}</p>
+                              {resultado.cargoAproximado && (
+                                <p className="text-xs text-amber-600 mt-1">
+                                  ⚡ {resultado.cargoAproximado}
+                                </p>
+                              )}
                             </div>
                             <div className="bg-background/50 p-2 rounded">
                               <p className="text-muted-foreground">Admissão:</p>
