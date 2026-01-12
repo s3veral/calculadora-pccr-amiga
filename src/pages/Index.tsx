@@ -10,6 +10,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import SalaryComposition from '@/components/SalaryComposition';
+import SalaryComparison from '@/components/SalaryComparison';
+import NameSearch from '@/components/NameSearch';
 
 interface ResultadoCargo {
   tipo: 'cargo';
@@ -664,12 +667,34 @@ const Index = () => {
               {/* Modo Matrícula */}
               <TabsContent value="matricula" className="space-y-6 mt-0">
                 <CardDescription className="text-center">
-                  Digite sua matrícula para consultar seus dados diretamente da API do Portal da Transparência
+                  Busque por matrícula ou nome para consultar dados do Portal da Transparência
                 </CardDescription>
+
+                {/* Busca por Nome */}
+                <NameSearch 
+                  onSelectServidor={(mat) => {
+                    setMatricula(mat);
+                    // Auto-consultar após selecionar
+                    setTimeout(() => {
+                      const btn = document.getElementById('btn-consultar-matricula');
+                      if (btn) btn.click();
+                    }, 100);
+                  }}
+                  formatarMoeda={formatarMoeda}
+                />
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">ou</span>
+                  </div>
+                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="matricula" className="text-sm font-medium">
-                    🔢 Matrícula
+                    🔢 Matrícula Direta
                   </Label>
                   <Input
                     id="matricula"
@@ -682,6 +707,7 @@ const Index = () => {
                 </div>
 
                 <Button
+                  id="btn-consultar-matricula"
                   onClick={handleConsultarMatricula}
                   disabled={carregando || !matricula.trim()}
                   className="w-full text-lg py-6"
@@ -843,263 +869,38 @@ const Index = () => {
                         </CardContent>
                       </Card>
 
-                      {/* Detalhamento do Bruto Atual */}
+                      {/* Detalhamento do Bruto/Líquido com novo componente */}
                       {resultado.brutoAtual > 0 && (
-                        <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-                          <CardContent className="pt-4 pb-4 space-y-3">
-                            <h3 className="font-semibold text-center text-base text-blue-800 dark:text-blue-200">
-                              💰 Composição do Bruto Atual
-                            </h3>
-                            
-                            <div className="space-y-2 text-sm">
-                              {/* Base Salarial */}
-                              <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                <span className="text-muted-foreground">Base Salarial:</span>
-                                <span className="font-medium">{formatarMoeda(resultado.salarioBaseAtual)}</span>
-                              </div>
-                              
-                              {/* Componentes variáveis - só mostra se > 0 */}
-                              {resultado.composicao.comissao > 0 && (
-                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                  <span className="text-muted-foreground">Comissão:</span>
-                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.comissao)}</span>
-                                </div>
-                              )}
-                              {resultado.composicao.portaria > 0 && (
-                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                  <span className="text-muted-foreground">Portaria:</span>
-                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.portaria)}</span>
-                                </div>
-                              )}
-                              {resultado.composicao.anuenio > 0 && (
-                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                  <span className="text-muted-foreground">Anuênio:</span>
-                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.anuenio)}</span>
-                                </div>
-                              )}
-                              {resultado.composicao.insalubridade > 0 && (
-                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                  <span className="text-muted-foreground">Insalubridade:</span>
-                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.insalubridade)}</span>
-                                </div>
-                              )}
-                              {resultado.composicao.periculosidade > 0 && (
-                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                  <span className="text-muted-foreground">Periculosidade:</span>
-                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.periculosidade)}</span>
-                                </div>
-                              )}
-                              {resultado.composicao.adicionalNoturno > 0 && (
-                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                  <span className="text-muted-foreground">Adicional Noturno:</span>
-                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.adicionalNoturno)}</span>
-                                </div>
-                              )}
-                              {resultado.composicao.horasExtras > 0 && (
-                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                  <span className="text-muted-foreground">Horas Extras:</span>
-                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.horasExtras)}</span>
-                                </div>
-                              )}
-                              {resultado.composicao.gratificacao > 0 && (
-                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                  <span className="text-muted-foreground">Gratificação:</span>
-                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.gratificacao)}</span>
-                                </div>
-                              )}
-                              {resultado.composicao.outrosVencimentos > 0 && (
-                                <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                  <span className="text-muted-foreground">Outros Vencimentos:</span>
-                                  <span className="font-medium text-green-600">+{formatarMoeda(resultado.composicao.outrosVencimentos)}</span>
-                                </div>
-                              )}
-                              
-                              {/* Linha divisória e totais */}
-                              <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2 space-y-2">
-                                <div className="flex justify-between items-center bg-background p-2 rounded font-semibold">
-                                  <span>Bruto:</span>
-                                  <span className="text-lg text-blue-700 dark:text-blue-300">{formatarMoeda(resultado.brutoAtual)}</span>
-                                </div>
-                                {resultado.composicao.descontos > 0 && (
-                                  <div className="flex justify-between items-center bg-background/80 p-2 rounded">
-                                    <span className="text-muted-foreground">Descontos:</span>
-                                    <span className="font-medium text-red-600">-{formatarMoeda(resultado.composicao.descontos)}</span>
-                                  </div>
-                                )}
-                                <div className="flex justify-between items-center bg-background p-2 rounded font-semibold">
-                                  <span>Líquido:</span>
-                                  <span className="text-lg">{formatarMoeda(resultado.liquidoAtual)}</span>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <p className="text-[10px] text-center text-blue-600 dark:text-blue-400">
-                              * Dados do mês mais recente disponível no Portal da Transparência
-                            </p>
-                          </CardContent>
-                        </Card>
+                        <SalaryComposition
+                          salarioBase={resultado.salarioBaseAtual}
+                          bruto={resultado.brutoAtual}
+                          liquido={resultado.liquidoAtual}
+                          composicao={resultado.composicao}
+                          formatarMoeda={formatarMoeda}
+                        />
                       )}
 
                       {resultado.salarioNovo > 0 && (
-                        <Card className="bg-muted/30 border-muted">
-                          <CardContent className="pt-6 space-y-4">
-                            <h3 className="font-semibold text-center text-lg">📊 Comparativo</h3>
-                            
-                            <div className="grid grid-cols-2 gap-4 text-center">
-                              <div className="p-3 bg-background rounded-lg">
-                                <p className="text-xs text-muted-foreground mb-1">💰 Salário Base Atual</p>
-                                <p className="text-xl font-bold text-muted-foreground">{formatarMoeda(resultado.salarioBaseAtual)}</p>
-                              </div>
-                              <div className="p-3 bg-primary/10 rounded-lg">
-                                <p className="text-xs text-muted-foreground mb-1">🎉 Base PCCR</p>
-                                <p className="text-xl font-bold text-primary">{formatarMoeda(resultado.salarioNovo)}</p>
-                              </div>
-                            </div>
+                        <>
+                          <SalaryComparison
+                            salarioBaseAtual={resultado.salarioBaseAtual}
+                            salarioNovoPCCR={resultado.salarioNovo}
+                            anosServico={resultado.anosServico}
+                            formatarMoeda={formatarMoeda}
+                            isCargoSaude={isCargoSaude(resultado.categoria, resultado.cargo)}
+                            composicaoInsalubridade={resultado.composicao.insalubridade}
+                          />
 
-                            <div className="text-center p-4 bg-background rounded-lg border">
-                              <p className="text-sm text-muted-foreground mb-2">Diferença (Base PCCR vs Atual)</p>
-                              <p className={`text-2xl font-bold ${resultado.aumento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {resultado.aumento >= 0 ? '+' : ''}{formatarMoeda(resultado.aumento)}
-                              </p>
-                              <p className={`text-lg font-semibold ${resultado.aumento >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                ({resultado.aumento >= 0 ? '+' : ''}{resultado.percentual.toFixed(2)}%)
-                              </p>
-                            </div>
-
-                            {/* Projeção com maior base - sempre mostrar ambas opções */}
-                            {resultado.salarioBaseAtual !== resultado.salarioNovo && (
-                              (() => {
-                                // Calcular progressão sobre o base atual usando regras PCCR
-                                // Progressão: a cada 3 anos sobe 1 padrão com ~3% de aumento
-                                const padraoAtual = Math.min(Math.floor(resultado.anosServico / 3), 14);
-                                const fatorProgressao = Math.pow(1.03, padraoAtual); // ~3% por padrão
-                                const baseAtualComProgressao = resultado.salarioBaseAtual * fatorProgressao;
-                                
-                                return (
-                                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-4">
-                                    <div className="flex items-start gap-2">
-                                      <span className="text-amber-600 text-lg">⚖️</span>
-                                      <div>
-                                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                                          Projeções com Progressão PCCR
-                                        </p>
-                                        <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                                          Estimativa aplicando as regras de progressão (padrão {getPadraoAtual(resultado.anosServico)}) em cada base:
-                                        </p>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                      <div className="bg-background/80 rounded p-3 text-center border border-primary/30">
-                                        <p className="text-xs text-muted-foreground mb-1">📗 Base Tabela PCCR</p>
-                                        <p className="text-xl font-bold text-primary">
-                                          {formatarMoeda(resultado.salarioNovo)}
-                                        </p>
-                                        <p className="text-[10px] text-muted-foreground mt-1">
-                                          (tabela PLC 0017/2025 + progressão)
-                                        </p>
-                                      </div>
-                                      <div className="bg-background/80 rounded p-3 text-center border border-amber-300 dark:border-amber-700">
-                                        <p className="text-xs text-muted-foreground mb-1">📙 Base Atual + Progressão PCCR</p>
-                                        <p className="text-xl font-bold text-amber-700 dark:text-amber-300">
-                                          {formatarMoeda(baseAtualComProgressao)}
-                                        </p>
-                                        <p className="text-[10px] text-muted-foreground mt-1">
-                                          (R$ {resultado.salarioBaseAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} × progressão)
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    <div className="text-center p-3 bg-background/50 rounded-lg border border-dashed border-amber-300">
-                                      <p className="text-xs text-muted-foreground mb-1">Comparativo das projeções</p>
-                                      <p className={`text-lg font-bold ${resultado.salarioNovo >= baseAtualComProgressao ? 'text-green-600' : 'text-amber-600'}`}>
-                                        {resultado.salarioNovo >= baseAtualComProgressao 
-                                          ? `Tabela PCCR é ${formatarMoeda(resultado.salarioNovo - baseAtualComProgressao)} maior`
-                                          : `Base Atual com progressão é ${formatarMoeda(baseAtualComProgressao - resultado.salarioNovo)} maior`
-                                        }
-                                      </p>
-                                    </div>
-
-                                    {resultado.salarioBaseAtual > resultado.salarioNovo && (
-                                      <p className="text-xs text-amber-700 dark:text-amber-300 text-center font-medium">
-                                        ⚠️ Seu salário atual é MAIOR que a tabela PCCR. Se a regra for manter o maior valor como base, a progressão seria sobre ele.
-                                      </p>
-                                    )}
-                                  </div>
-                                );
-                              })()
-                            )}
-
-                            {/* Aviso de estimativa */}
-                            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                              <div className="flex items-start gap-2">
-                                <span className="text-blue-600">ℹ️</span>
-                                <p className="text-xs text-blue-800 dark:text-blue-200">
-                                  <strong>ATENÇÃO:</strong> Estes valores são apenas <strong>ESTIMATIVAS</strong> baseadas no PLC 0017/2025. 
-                                  O documento oficial do PCCR é pouco detalhado sobre regras de enquadramento e transição. 
-                                  Valores finais dependem de regulamentação complementar.
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Insalubridade para cargos da saúde */}
-                            {isCargoSaude(resultado.categoria, resultado.cargo) && (
-                              <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
-                                <CardContent className="pt-4 pb-4 space-y-3">
-                                  <h3 className="font-semibold text-center text-base text-green-800 dark:text-green-200">
-                                    🏥 Estimativa com Insalubridade
-                                  </h3>
-                                  <p className="text-[10px] text-center text-green-700 dark:text-green-300">
-                                    Valores estimados caso receba adicional de insalubridade (calculados sobre a maior base)
-                                  </p>
-                                  
-                                  {(() => {
-                                    const baseMaior = Math.max(resultado.salarioNovo, resultado.salarioBaseAtual);
-                                    return (
-                                      <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center">
-                                        <div className="p-2 sm:p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
-                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Mínimo</p>
-                                          <p className="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">
-                                            {formatarMoeda(baseMaior * 1.10)}
-                                          </p>
-                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.10)} (+10%)</p>
-                                        </div>
-                                        <div className="p-2 sm:p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
-                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Médio</p>
-                                          <p className="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">
-                                            {formatarMoeda(baseMaior * 1.20)}
-                                          </p>
-                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.20)} (+20%)</p>
-                                        </div>
-                                        <div className="p-2 sm:p-3 bg-background rounded-lg border border-green-200 dark:border-green-800">
-                                          <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Máximo</p>
-                                          <p className="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">
-                                            {formatarMoeda(baseMaior * 1.40)}
-                                          </p>
-                                          <p className="text-[9px] sm:text-xs text-green-600">+{formatarMoeda(baseMaior * 0.40)} (+40%)</p>
-                                        </div>
-                                      </div>
-                                    );
-                                  })()}
-                                  
-                                  <p className="text-[10px] text-center text-green-600 dark:text-green-400">
-                                    ⚠️ Valores ilustrativos. O percentual real depende da avaliação do ambiente de trabalho.
-                                  </p>
-                                </CardContent>
-                              </Card>
-                            )}
-
-                            {/* Botão para ver histórico */}
-                            <Button
-                              variant="outline"
-                              onClick={() => handleBuscarHistorico(resultado.matricula)}
-                              disabled={carregandoHistorico}
-                              className="w-full"
-                            >
-                              {carregandoHistorico ? '⏳ Carregando...' : '📈 Ver Histórico Salarial (2018-2025)'}
-                            </Button>
-                          </CardContent>
-                        </Card>
+                          {/* Botão para ver histórico */}
+                          <Button
+                            variant="outline"
+                            onClick={() => handleBuscarHistorico(resultado.matricula)}
+                            disabled={carregandoHistorico}
+                            className="w-full"
+                          >
+                            {carregandoHistorico ? '⏳ Carregando...' : '📈 Ver Histórico Salarial (2018-2025)'}
+                          </Button>
+                        </>
                       )}
 
                       {/* Histórico Salarial */}
