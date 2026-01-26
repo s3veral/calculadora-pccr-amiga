@@ -543,7 +543,7 @@ const Index = () => {
             <CardHeader className="bg-primary/5 pb-0">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="cargo">💼 Por Cargo</TabsTrigger>
-                <TabsTrigger value="matricula">🔢 Por Matrícula</TabsTrigger>
+                <TabsTrigger value="matricula">🔢 Por Matrícula/Nome</TabsTrigger>
               </TabsList>
             </CardHeader>
 
