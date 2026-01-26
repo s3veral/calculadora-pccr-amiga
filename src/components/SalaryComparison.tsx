@@ -81,12 +81,12 @@ const SalaryComparison = ({
 
         {/* Projeções com Toggle */}
         <Tabs defaultValue="cenario1" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-auto">
-            <TabsTrigger value="cenario1" className="text-xs py-2">
-              📗 Cenário: Base PCCR
+          <TabsList className="grid w-full grid-cols-2 h-auto bg-muted p-1">
+            <TabsTrigger value="cenario1" className="text-xs py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              📗 Base PCCR
             </TabsTrigger>
-            <TabsTrigger value="cenario2" className="text-xs py-2">
-              📙 Cenário: Mantém Atual
+            <TabsTrigger value="cenario2" className="text-xs py-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              📙 Mantém Atual
             </TabsTrigger>
           </TabsList>
           
