@@ -76,14 +76,19 @@ const NameSearch = ({ onSelectServidor, formatarMoeda }: NameSearchProps) => {
   return (
     <div className="space-y-3">
       <div className="space-y-2">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-[10px] font-semibold px-2 py-1 rounded-full">
+            BUSCA POR NOME
+          </span>
+        </div>
         <Label htmlFor="nome-busca" className="text-sm font-medium">
-          🔤 Buscar por Nome
+          🔤 Digite o nome do servidor
         </Label>
         <div className="flex gap-2">
           <Input
             id="nome-busca"
             type="text"
-            placeholder="Digite o nome do servidor..."
+            placeholder="Ex: Maria Silva, João Santos..."
             value={nomeBusca}
             onChange={(e) => setNomeBusca(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleBuscarNome()}

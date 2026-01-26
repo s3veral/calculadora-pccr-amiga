@@ -693,13 +693,18 @@ const Index = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-[10px] font-semibold px-2 py-1 rounded-full">
+                      BUSCA POR MATRÍCULA
+                    </span>
+                  </div>
                   <Label htmlFor="matricula" className="text-sm font-medium">
-                    🔢 Matrícula Direta
+                    🔢 Digite o número da matrícula
                   </Label>
                   <Input
                     id="matricula"
                     type="text"
-                    placeholder="Digite sua matrícula..."
+                    placeholder="Ex: 12345, 00123..."
                     value={matricula}
                     onChange={(e) => setMatricula(e.target.value)}
                     className="text-lg"
